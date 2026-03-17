@@ -185,37 +185,6 @@ class DataProcessor:
             logger.error(f"Error saving article JSON: {e}")
             return None
 
-    def save_to_json(self, data: List[Dict], filename: str, directory: Path = None) -> str:
-        """
-        Save data to JSON file
-
-        Args:
-            data: List of dictionaries to save
-            filename: Output filename
-            directory: Target directory (default: RAW_DATA_DIR)
-
-        Returns:
-            Path to saved file
-        """
-        try:
-            if directory is None:
-                directory = self.config.RAW_DATA_DIR
-
-            # Add timestamp to filename
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"{filename}_{timestamp}.json"
-            filepath = directory / filename
-
-            with open(filepath, 'w', encoding='utf-8') as f:
-                json.dump(data, f, ensure_ascii=False, indent=2)
-
-            logger.info(f"Data saved to {filepath}")
-            return str(filepath)
-
-        except Exception as e:
-            logger.error(f"Error saving JSON: {e}")
-            raise
-
     def save_to_db(self, data: List[Dict]) -> int:
         """
         Save data to PostgreSQL database
@@ -287,26 +256,6 @@ class DataProcessor:
             logger.error(f"Error saving to database: {e}")
             if conn:
                 conn.rollback()
-            raise
-
-    def load_json(self, filepath: str) -> List[Dict]:
-        """
-        Load data from JSON file
-
-        Args:
-            filepath: Path to JSON file
-
-        Returns:
-            List of dictionaries
-        """
-        try:
-            with open(filepath, 'r', encoding='utf-8') as f:
-                data = json.load(f)
-            logger.info(f"Loaded {len(data)} records from {filepath}")
-            return data
-
-        except Exception as e:
-            logger.error(f"Error loading JSON: {e}")
             raise
 
     def close_connection(self):
@@ -424,7 +373,7 @@ class DataProcessor:
                     else:
                         logger.warning(f"Skipping JSON save for article (empty body): {article_for_json.get('title', 'Unknown')[:50]}... (URL: {article_for_json.get('link', 'N/A')[:80]})")
 
-                # Prepare processed article for DB
+                # Prepare processed article for DB (include body for display)
                 processed_article = {
                     'keyword': article.get('keyword', ''),
                     'title': article_for_json['title'],
@@ -432,6 +381,7 @@ class DataProcessor:
                     'google_link': article_for_json['google_link'],
                     'published': published,
                     'source': article.get('source', ''),
+                    'body': article_for_json['body'],
                     'body_path': body_path
                 }
                 processed.append(processed_article)

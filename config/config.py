@@ -42,9 +42,6 @@ class Config:
     MAX_RETRIES = 3
     RETRY_DELAY = 2  # seconds
 
-    # Data processing settings
-    MAX_ARTICLES_PER_KEYWORD = 50
-    SAVE_FORMAT = "json"  # json or csv
 
     # Database settings (PostgreSQL)
     DB_HOST = os.getenv("DB_HOST", "localhost")
@@ -56,7 +53,7 @@ class Config:
     # LLM settings for content extraction
     LLM_ENABLED = os.getenv("LLM_ENABLED", "true").lower() == "true"
     LLM_API_BASE = os.getenv("LLM_API_BASE", "http://localhost:11434")  # Ollama default
-    LLM_MODEL = os.getenv("LLM_MODEL", "qwen3:8b")
+    LLM_MODEL = os.getenv("LLM_MODEL", "qwen3:latest")
     LLM_TIMEOUT = int(os.getenv("LLM_TIMEOUT", "60"))
 
     @classmethod
@@ -67,15 +64,14 @@ class Config:
             directory.mkdir(parents=True, exist_ok=True)
 
     @classmethod
-    def get_google_news_url(cls, keyword=None, topic=None, d_after=None, d_before=None):
+    def get_google_news_url(cls, keyword, d_after=None, d_before=None):
         """
-        Generate Google News RSS URL
+        Generate Google News RSS URL for keyword search
 
         Args:
             keyword: Search keyword
-            topic: Topic category (WORLD, NATION, BUSINESS, TECHNOLOGY, etc.)
-            d_after: base date for search '2026-03-01'
-            d_before: end date for search '2026-03-08'
+            d_after: Start date for search '2026-03-01'
+            d_before: End date for search '2026-03-08'
 
         Returns:
             RSS URL string
@@ -100,12 +96,5 @@ class Config:
             # Build date query string
             date_query = f"+after:{d_after}+before:{d_before}"
 
-        if keyword:
-            # Search by keyword with optional date range
-            return f"{cls.GOOGLE_NEWS_RSS_BASE}/search?q={keyword}{date_query}&hl={cls.RSS_LANGUAGE}&gl={cls.RSS_COUNTRY}&ceid={cls.RSS_COUNTRY}:{cls.RSS_LANGUAGE}"
-        elif topic:
-            # Search by topic
-            return f"{cls.GOOGLE_NEWS_RSS_BASE}/topics/{topic}?hl={cls.RSS_LANGUAGE}&gl={cls.RSS_COUNTRY}&ceid={cls.RSS_COUNTRY}:{cls.RSS_LANGUAGE}"
-        else:
-            # Top stories
-            return f"{cls.GOOGLE_NEWS_RSS_BASE}?hl={cls.RSS_LANGUAGE}&gl={cls.RSS_COUNTRY}&ceid={cls.RSS_COUNTRY}:{cls.RSS_LANGUAGE}"
+        # Search by keyword with optional date range
+        return f"{cls.GOOGLE_NEWS_RSS_BASE}/search?q={keyword}{date_query}&hl={cls.RSS_LANGUAGE}&gl={cls.RSS_COUNTRY}&ceid={cls.RSS_COUNTRY}:{cls.RSS_LANGUAGE}"

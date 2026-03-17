@@ -208,8 +208,11 @@ Text from {url}:
 Article content:"""
 
             # Call Ollama API
+            api_url = f"{self.config.LLM_API_BASE}/api/generate"
+            logger.info(f"Calling LLM API: {api_url} with model: {self.config.LLM_MODEL}")
+
             response = requests.post(
-                f"{self.config.LLM_API_BASE}/api/generate",
+                api_url,
                 json={
                     "model": self.config.LLM_MODEL,
                     "prompt": prompt,
@@ -221,14 +224,37 @@ Article content:"""
             if response.status_code == 200:
                 result = response.json()
                 content = result.get('response', '').strip()
-                if len(content) > 100:
+
+                # Filter out invalid LLM responses
+                invalid_patterns = [
+                    'corrupted',
+                    'non-printable characters',
+                    'binary file',
+                    'base64',
+                    'cannot be reliably extracted',
+                    'not contain a coherent article',
+                    'does not contain',
+                    'appears to be a corrupted',
+                    'example:',
+                    'python',
+                    '```'
+                ]
+
+                content_lower = content.lower()
+                is_invalid = any(pattern in content_lower for pattern in invalid_patterns)
+
+                if is_invalid:
+                    logger.warning(f"LLM returned invalid/corrupted content detection, treating as empty")
+                    return ""
+                elif len(content) > 100:
                     logger.info(f"Content extracted using LLM ({len(content)} chars)")
                     return content
                 else:
                     logger.warning("LLM returned too short content")
                     return ""
             else:
-                logger.error(f"LLM API error: {response.status_code}")
+                logger.error(f"LLM API error: {response.status_code} - URL: {api_url}")
+                logger.error(f"Response: {response.text}")
                 return ""
 
         except Exception as e:

@@ -2,8 +2,6 @@
 Main execution script for Google News RSS scraper
 """
 import argparse
-import logging
-from pathlib import Path
 from config.config import Config
 from src.rss_fetcher import RSSFetcher
 from src.scraper import WebScraper
@@ -22,33 +20,10 @@ def main():
         default=None
     )
     parser.add_argument(
-        '--topic',
-        type=str,
-        help='Topic category (e.g., TECHNOLOGY, BUSINESS)',
-        default=None
-    )
-    parser.add_argument(
         '--max-articles',
         type=int,
         help='Maximum number of articles to fetch per keyword (default: all)',
         default=None
-    )
-    parser.add_argument(
-        '--scrape-content',
-        action='store_true',
-        help='Scrape full article content from URLs'
-    )
-    parser.add_argument(
-        '--output-format',
-        choices=['json', 'db', 'both'],
-        default='both',
-        help='Output format: json (file only), db (database only), or both'
-    )
-    parser.add_argument(
-        '--output-name',
-        type=str,
-        default='google_news_articles',
-        help='Output filename (without extension)'
     )
     parser.add_argument(
         '--d-after',
@@ -92,29 +67,19 @@ def main():
     # Fetch RSS feeds
     all_articles = []
 
-    if args.topic:
-        logger.info(f"Fetching articles for topic: {args.topic}")
-        feed = rss_fetcher.fetch_by_topic(args.topic)
-        if feed:
-            articles = rss_fetcher.parse_entries(feed)
-            if args.max_articles:
-                all_articles.extend(articles[:args.max_articles])
-            else:
-                all_articles.extend(articles)
-    else:
-        # Fetch by keywords
-        results = rss_fetcher.fetch_multiple_keywords(
-            keywords,
-            d_after=args.d_after,
-            d_before=args.d_before
-        )
+    # Fetch by keywords
+    results = rss_fetcher.fetch_multiple_keywords(
+        keywords,
+        d_after=args.d_after,
+        d_before=args.d_before
+    )
 
-        for keyword, articles in results.items():
-            logger.info(f"Found {len(articles)} articles for '{keyword}'")
-            if args.max_articles:
-                all_articles.extend(articles[:args.max_articles])
-            else:
-                all_articles.extend(articles)
+    for keyword, articles in results.items():
+        logger.info(f"Found {len(articles)} articles for '{keyword}'")
+        if args.max_articles:
+            all_articles.extend(articles[:args.max_articles])
+        else:
+            all_articles.extend(articles)
 
     logger.info(f"Total articles fetched: {len(all_articles)}")
 

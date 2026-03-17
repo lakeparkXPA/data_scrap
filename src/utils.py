@@ -169,7 +169,7 @@ def format_article_summary(article: dict, max_length: int = 200) -> str:
     title = article.get('title', 'No title')
     source = article.get('source', 'Unknown source')
     published = article.get('published', 'Unknown date')
-    summary = article.get('summary', '')
+    summary = article.get('body', '')
 
     summary_text = truncate_text(summary, max_length)
 

@@ -63,29 +63,6 @@ class RSSFetcher:
         url = self.config.get_google_news_url(keyword=keyword, d_after=d_after, d_before=d_before)
         return self.fetch_feed(url)
 
-    def fetch_by_topic(self, topic: str) -> Optional[feedparser.FeedParserDict]:
-        """
-        Fetch Google News RSS by topic
-
-        Args:
-            topic: Topic category (e.g., TECHNOLOGY, BUSINESS)
-
-        Returns:
-            Parsed feed object
-        """
-        url = self.config.get_google_news_url(topic=topic)
-        return self.fetch_feed(url)
-
-    def fetch_top_stories(self) -> Optional[feedparser.FeedParserDict]:
-        """
-        Fetch Google News top stories
-
-        Returns:
-            Parsed feed object
-        """
-        url = self.config.get_google_news_url()
-        return self.fetch_feed(url)
-
     def parse_entries(self, feed: feedparser.FeedParserDict) -> List[Dict]:
         """
         Parse feed entries into structured data
